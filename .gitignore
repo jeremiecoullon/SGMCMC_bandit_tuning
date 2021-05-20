@@ -1,0 +1,6 @@
+venv/
+data/notMNIST/
+data/MovieLens/
+.DS_Store
+__pycache__/
+
