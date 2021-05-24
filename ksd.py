@@ -6,7 +6,6 @@ from jax import lax, random
 @jit
 def k_0_fun(parm1, parm2, gradlogp1, gradlogp2, c=1., beta=-0.5):
     """
-    New version: the (new) term4 starts with `-2*dim` rather than `-4`
     KSD kernel with the 2 norm
     """
     diff = parm1-parm2
@@ -25,7 +24,7 @@ batch_k_0_fun_rows = jit(vmap(k_0_fun, in_axes=(None,0,None,0,None,None)))
 @jit
 def imq_KSD(sgld_samples, sgld_grads):
     """
-    This version works better on CPU with lots of parameters and high dimensions
+    KSD with imq kernel
     """
     c, beta = 1., -0.5
     N = sgld_samples.shape[0]
