@@ -10,7 +10,7 @@ _By Jeremie Coullon, Leah South, and Christoper Nemeth_
 
 ### Logistic regression
 
-- `LR_2d_gridsearch.ipynb`: reproduces figure 2 in paper. the 2D grid search with 9 SH parameters overlayed
+- `LR_2d_gridsearch.ipynb`: reproduces figure 2. the 2D grid search with 9 SH parameters overlayed
 - `LR_KSD_curves`: runs the KSD curves and reproduces figure 1
 
 
@@ -21,8 +21,8 @@ _By Jeremie Coullon, Leah South, and Christoper Nemeth_
 ### NN
 
 - `NN-KSD_curves.ipynb`: reproduces the KSD curves in figure 4
-- `NN-ECE_curves.ipynb`: reproduces the ECE curves in figure 4
-- `NN-uncertainty_metrics.ipynb`: reproduces the OOD plot in figure 7
+- `NN-ECE_curves.ipynb`: reproduces the ECE curves in figure 7
+- `NN-uncertainty_metrics.ipynb`: reproduces the OOD plot in figure 8
 
 ### Other
 
