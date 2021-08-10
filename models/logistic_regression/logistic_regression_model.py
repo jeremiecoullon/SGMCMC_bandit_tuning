@@ -61,28 +61,11 @@ def gen_data(key, dim, N):
     return theta_true, X, y_data
 
 
-def gen_data_and_log_post(key, dim, N, rho=0.4):
-    """
-    Setup logistic regression
-    """
-    theta_true, X, y_data = gen_data(key, dim, N)
 
-    @jit
-    def loglikelihood(theta, x_val, y_val):
-        return -logsumexp(jnp.array([0., (1.-2.*y_val)*jnp.dot(theta, x_val)]))
+@jit
+def loglikelihood(theta, x_val, y_val):
+    return -logsumexp(jnp.array([0., (1.-2.*y_val)*jnp.dot(theta, x_val)]))
 
-    @jit
-    def log_prior(theta):
-        return -(0.5/10)*jnp.dot(theta,theta)
-
-
-
-    batch_loglik = jit(vmap(loglikelihood, in_axes=(None, 0,0)))
-
-    def log_post(theta, x_val, y_val):
-        return log_prior(theta) + N*jnp.mean(batch_loglik(theta, x_val, y_val), axis=0)
-
-    grad_log_post = jit(grad(log_post))
-
-    val_and_grad_log_post = jit(value_and_grad(log_post))
-    return theta_true, X, y_data, val_and_grad_log_post
+@jit
+def logprior(theta):
+    return -(0.5/10)*jnp.dot(theta,theta)

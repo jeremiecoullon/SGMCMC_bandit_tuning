@@ -27,7 +27,7 @@ def random_layer(key, m, n, scale=1e-2):
     return (scale*random.normal(key, (n,m))), scale*random.normal(subkey, (n,))
 
 
-def init_network(key, sizes):
+def init_network(key, sizes=[784, 100, 10]):
     keys = random.split(key, len(sizes))
     return [random_layer(k,m,n) for k,m,n in zip(keys, sizes[:-1], sizes[1:])]
 
@@ -56,10 +56,10 @@ def predict(params, x):
 # Log-posterior
 
 @jit
-def loglik(params, X, y):
+def loglikelihood(params, X, y):
     return jnp.sum(y*predict(params, X))
 
-batch_loglik = vmap(loglik, in_axes=(None, 0, 0), out_axes=0)
+# batch_loglik = vmap(loglik, in_axes=(None, 0, 0), out_axes=0)
 
 def logprior(params):
     logP = 0.0
@@ -69,12 +69,12 @@ def logprior(params):
     return logP
 
 
-@jit
-def log_post(params, X, y):
-    return N_data*jnp.mean(batch_loglik(params, X, y)) + logprior(params)
-
-
-grad_log_post = jit(grad(log_post))
+# @jit
+# def log_post(params, X, y):
+#     return N_data*jnp.mean(batch_loglik(params, X, y)) + logprior(params)
+#
+#
+# grad_log_post = jit(grad(log_post))
 
 
 # Accuracy stuff:

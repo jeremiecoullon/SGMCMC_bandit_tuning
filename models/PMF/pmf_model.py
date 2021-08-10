@@ -7,16 +7,17 @@ Probabilistic Matrix Factorisation
 
 
 @jit
-def loglik(params, data, alpha):
+def loglikelihood(params, data):
     """
     log likelihood for a single data point
     alpha: precision of observational noise
     """
+    alpha = 3.
     U, V, _, _, _, _ =  params
     i, j, r_ij = data
     return (-alpha/2)*(r_ij - jnp.dot(U[:,(i-1).astype(int)].T, V[:, (j-1).astype(int)]))**2
 
-batch_loglik = vmap(loglik, in_axes=(None, 0, None))
+# batch_loglik = vmap(loglik, in_axes=(None, 0, None))
 
 @jit
 def lp_M(M, mu_M, lambda_M):
@@ -50,10 +51,10 @@ def logprior(params):
     return term_U + term_V + term_muU + term_muV + term_lambdaU + term_lambdaV
 
 
-@jit
-def log_post(params, data):
-    Ndata = 80000 # dataset size
-    return logprior(params) + Ndata*jnp.mean(batch_loglik(params, data, 3.))
-
-grad_log_post = jit(grad(log_post))
-val_grad_logpost = jit(value_and_grad(log_post))
+# @jit
+# def log_post(params, data):
+#     Ndata = 80000 # dataset size
+#     return logprior(params) + Ndata*jnp.mean(batch_loglik(params, data, 3.))
+#
+# grad_log_post = jit(grad(log_post))
+# val_grad_logpost = jit(value_and_grad(log_post))
