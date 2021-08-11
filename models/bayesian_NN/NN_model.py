@@ -69,14 +69,6 @@ def logprior(params):
     return logP
 
 
-# @jit
-# def log_post(params, X, y):
-#     return N_data*jnp.mean(batch_loglik(params, X, y)) + logprior(params)
-#
-#
-# grad_log_post = jit(grad(log_post))
-
-
 # Accuracy stuff:
 
 # Single point accuracy:
