@@ -58,6 +58,13 @@ def _predict_loss(U, V, data, mean_rating):
     return (pred-r_ij)**2
     # return pred
 
+
+@jit
+def rmse_1sample(params, data=R_test, mean_rating=mean_rating):
+    "rmse for 1 sampler. Take average over all data"
+    batch_predict_loss = vmap(_predict_loss, in_axes=(None, None, 0, None))
+    return jnp.mean(batch_predict_loss(params[0], params[1], data, mean_rating))
+
 def rmse_PMF_1data(U_samples, V_samples, data, mean_rating):
     """
     Get predictive RMSE for a single data point by averaging over the posterior samples for U and V
@@ -102,39 +109,43 @@ def get_rmse_list(samples, R_test, mean_rating):
         rmse_list.append(rmse_PMF(Usam, Vsam, R_test, mean_rating))
     return rmse_list
 
-def load_PMF_params():
-    return [np.genfromtxt(f"{BASE_DIR}/data/PMF_params/PMF_{idx}_IC.txt") for idx in range(6)]
 
-def load_PMF_mean():
-    return [np.genfromtxt(f"{BASE_DIR}/data/PMF_mean_params/PMF_{idx}_mean.txt") for idx in range(6)]
+def get_rmse_PMF_from_samples(samples):
+    Usams = jnp.array([elem[0] for elem in samples])
+    Vsams = jnp.array([elem[1] for elem in samples])
+    return rmse_PMF(Usams, Vsams, R_test, mean_rating)
+
+
+def add_noise_PMF_params(key, params, scale):
+    keys = random.split(key, len(params))
+    return [elem + scale*random.normal(k, shape=elem.shape) for elem,k in zip(params, keys)]
+
+
 
 def load_PMF_MAP():
-    return [np.genfromtxt(f"{BASE_DIR}/data/PMF_MAP_params/PMF_{idx}_MAP.txt") for idx in range(6)]
-
-def save_PMF_params(params):
-    for idx, par in enumerate(params):
-        np.savetxt(f"{BASE_DIR}/data/PMF_mean_params/PMF_{idx}_mean.txt", par)
+    params = np.load(f"../parameters/PMF_MAP.npy", allow_pickle=True)
+    return [jnp.array([jnp.array(e2) for e2 in e1]) for e1 in params]
 
 def load_PMF_NUTS_stds():
     return [np.genfromtxt(f"{BASE_DIR}/data/PMF_NUTS_stds/PMF_{idx}_std.txt") for idx in range(6)]
 
-def flatten_PMF_params(samples):
-    """
-    samples: list of PMF samples
-        Each sample is a list of arrays
-    """
-    flattened_samples = []
-    for lesam in samples:
-        flattened_samples.append(jnp.concatenate([elem.flatten() for elem in lesam]))
-    return jnp.array(flattened_samples)
-
-
-def _flatten_PMF(parm):
-    "Utility function for flatten_PMF_jax_scan"
-    return jnp.array([e.flatten() for e in parm])
-
-def flatten_PMF_jax_scan(params):
-    """
-    Flatten PMF params that came out of `jax.lax.scan`
-    """
-    return jnp.concatenate([_flatten_PMF(parm) for parm in params], axis=1)
+# def flatten_PMF_params(samples):
+#     """
+#     samples: list of PMF samples
+#         Each sample is a list of arrays
+#     """
+#     flattened_samples = []
+#     for lesam in samples:
+#         flattened_samples.append(jnp.concatenate([elem.flatten() for elem in lesam]))
+#     return jnp.array(flattened_samples)
+#
+#
+# def _flatten_PMF(parm):
+#     "Utility function for flatten_PMF_jax_scan"
+#     return jnp.array([e.flatten() for e in parm])
+#
+# def flatten_PMF_jax_scan(params):
+#     """
+#     Flatten PMF params that came out of `jax.lax.scan`
+#     """
+#     return jnp.concatenate([_flatten_PMF(parm) for parm in params], axis=1)

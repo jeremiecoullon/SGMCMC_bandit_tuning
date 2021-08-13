@@ -6,7 +6,8 @@ from jax import nn, random
 from jax import scipy
 import time
 
-from .util import flatten_NN_params
+# from .util import flatten_NN_params
+from util import flatten_param_list
 
 
 
@@ -123,7 +124,7 @@ def accuracy_BNN(samples, X, y):
     For each data point, get the average prediction over all samples
     Get average accuracy over all data points
     """
-    flat_samples = flatten_NN_params(samples)
+    flat_samples = flatten_param_list(samples)
     return accuracy_BNN_flat(flat_samples, X, y)
 
 @jit
@@ -190,5 +191,5 @@ def _ood_testing(flat_samples, X):
 
 def ood_testing(samples, X):
     "OOD testing. samples should be a list of tuples of arrays"
-    flat_samples = flatten_NN_params(samples)
+    flat_samples = flatten_param_list(samples)
     return _ood_testing(flat_samples, X)

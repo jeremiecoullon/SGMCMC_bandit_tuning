@@ -61,7 +61,6 @@ def gen_data(key, dim, N):
     return theta_true, X, y_data
 
 
-
 @jit
 def loglikelihood(theta, x_val, y_val):
     return -logsumexp(jnp.array([0., (1.-2.*y_val)*jnp.dot(theta, x_val)]))
@@ -69,3 +68,16 @@ def loglikelihood(theta, x_val, y_val):
 @jit
 def logprior(theta):
     return -(0.5/10)*jnp.dot(theta,theta)
+
+@jit
+def logloss_samples(samples, X, y):
+    "Logloss for an array (or list) of samples"
+    samples = jnp.array(samples)
+    _batch_loglik = jit(vmap(loglikelihood, in_axes=(None, 0, 0)))
+
+    @jit
+    def _logloss(theta, X, y):
+        return -jnp.mean(_batch_loglik(theta, X, y))
+
+    batch_logloss = jit(vmap(_logloss, in_axes=(0, None, None)))
+    return jnp.mean(batch_logloss(samples, X, y))

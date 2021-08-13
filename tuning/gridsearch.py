@@ -1,4 +1,4 @@
-
+import time
 import jax.numpy as jnp
 from copy import deepcopy
 import itertools
@@ -18,7 +18,7 @@ def create_grid(grid_params):
         key: hyperparameters. values: a single hyperparameter
     """
     if grid_params is None:
-        grid_params = {'log_dt': -jnp.arange(1., 7.)}
+        grid_params = {'log_dt': -jnp.arange(2., 8.)}
 
     if "log_dt" in grid_params.keys():
         grid_params["dt"] = jnp.power(jnp.ones(len(grid_params['log_dt']))*10, grid_params.pop("log_dt"))
@@ -35,9 +35,11 @@ def run_gridsearch(key, kernel, metric_fn, Niters, x_0, grid_params=None):
 
     str_params = ', '.join(list(list_hyperparams[0].keys()))
     print(f"Running gridsearch for {str_params}\nNumber of grid points: {len(list_hyperparams)}")
+    start_time = time.time()
     for hyper_params in list_hyperparams:
         print(hyper_params)
         my_sampler = build_sampler(**hyper_params, compiled=False)
         samples = my_sampler(key, Niters, x_0)
         list_metric.append(metric_fn(samples))
+    print(f"Running time for gridsearch: {time.time() - start_time:.0f} sec")
     return list_hyperparams, list_metric

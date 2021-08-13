@@ -1,6 +1,6 @@
 import jax.numpy as jnp
 from jax import random
-from ksd import imq_KSD
+from .ksd import imq_KSD
 import numpy as np
 from collections import OrderedDict
 import time
