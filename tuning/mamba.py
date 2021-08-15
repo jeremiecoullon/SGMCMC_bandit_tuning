@@ -24,36 +24,38 @@ def run_MAMBA(key: PRNGKey, build_kernel: Callable, error_fn: Callable, T: float
             params_IC: PyTree, grid_params: Union[Dict, None] = None, eta: int = 3) -> StateArm:
     """
     todo:
-    - what if sampler gave nothing? 1. don't concat. 2. last sample.
-    - number of iterations: check
+    - what if sampler gave nothing in the given time budget? 1. don't concat. 2. last sample.
+    - number of iterations: check manually
     - keep best 3 rather than best 1 ?
     """
     list_hyperparams = create_grid(grid_params)
     timed_sampler_factory = timed_sampler(build_kernel)
 
     list_arms = []
-    # initialisr arms
+    # initialise arms
     for hyper_params in list_hyperparams:
         list_arms.append(StateArm(
             hyperparameters=hyper_params,
             run_timed_sampler=timed_sampler_factory(**hyper_params),
             last_sample=params_IC
         ))
-    Niters = int(np.log(len(list_arms))/np.log(eta))
 
-    start_time = time.time()
+    Niters = int(np.log(len(list_arms))/np.log(eta))
+    start_time_mamba = time.time()
     for i in range(Niters):
         r = T/(len(list_arms)*Niters)
-        for idx in tqdm(range(len(list_arms)), desc=f"Iteration {i+1}/{Niters}, time budget = {r:.1f} sec"):
+        for idx in tqdm(range(len(list_arms)), desc=f"Iteration {i+1}/{Niters}, {len(list_arms)} arms, time budget = {r:.2f} sec"):
             key, subkey = random.split(key)
             state = list_arms[idx]
             samples, grads = state.run_timed_sampler(subkey, r, state.last_sample)
             state = update_state_arm(state, samples, grads, error_fn)
             list_arms[idx] = state
 
-        list_arms = sorted(list_arms, key=lambda s: s.metric)[:int(len(list_arms)/eta)]
+        list_arms = sorted(list_arms, key=lambda arm: arm.metric)[:int(len(list_arms)/eta)]
+        print(f"Number of samples: {[arm.samples.shape[0] for arm in list_arms]}")
 
-    print(f"Running time: {time.time() - start_time:.1f} sec")
+    wait_until_computed(list_arms[0].metric)
+    print(f"Running time: {time.time() - start_time_mamba:.1f} sec")
     assert len(list_arms) == 1
     return list_arms[0]
 
@@ -107,7 +109,8 @@ def update_state_arm(state: StateArm, samples: List, grads: List, error_fn: Call
         all_grads = jnp.concatenate([state.grads, grads])
     else:
         all_grads = grads
-    metric = error_fn(samples, grads)
+    _metric = error_fn(samples, grads)
+    metric = _metric if not jnp.isnan(_metric) else jnp.inf
     state = StateArm(hyperparameters=state.hyperparameters,
                      run_timed_sampler=state.run_timed_sampler,
                      last_sample=last_sample,
