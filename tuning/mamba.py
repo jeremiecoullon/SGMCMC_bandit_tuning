@@ -19,10 +19,15 @@ class StateArm(NamedTuple):
     grads: Union[jnp.ndarray, None] = None
     metric: Any = jnp.inf
 
+    def __str__(self):
+        return f"Hyperparams: {self.hyperparameters}. metric: {self.metric:.0f}"
 
-def run_MAMBA(key: PRNGKey, build_kernel: Callable, error_fn: Callable, T: float,
-            params_IC: PyTree, grid_params: Union[Dict, None] = None, eta: int = 3) -> StateArm:
+
+def run_MAMBA(key: PRNGKey, build_kernel: Callable, error_fn: Callable, R: float,
+            params_IC: PyTree, grid_params: Union[Dict, None] = None, get_fb_grads = None, eta: int = 3) -> StateArm:
     """
+    R: running time (sec) of longest sampler
+
     todo:
     - what if sampler gave nothing in the given time budget? 1. don't concat. 2. last sample.
     - number of iterations: check manually
@@ -41,6 +46,9 @@ def run_MAMBA(key: PRNGKey, build_kernel: Callable, error_fn: Callable, T: float
         ))
 
     Niters = int(np.log(len(list_arms))/np.log(eta))
+    r_0 = R/sum([eta**i for i in range(Niters)])
+    T = r_0 * len(list_arms)*Niters # total time budget over all samplers
+
     start_time_mamba = time.time()
     for i in range(Niters):
         r = T/(len(list_arms)*Niters)
@@ -48,15 +56,16 @@ def run_MAMBA(key: PRNGKey, build_kernel: Callable, error_fn: Callable, T: float
             key, subkey = random.split(key)
             state = list_arms[idx]
             samples, grads = state.run_timed_sampler(subkey, r, state.last_sample)
-            state = update_state_arm(state, samples, grads, error_fn)
+            state = update_state_arm(state, samples, grads, error_fn, get_fb_grads)
+            print(state)
             list_arms[idx] = state
 
         list_arms = sorted(list_arms, key=lambda arm: arm.metric)[:int(len(list_arms)/eta)]
         print(f"Number of samples: {[arm.samples.shape[0] for arm in list_arms]}")
 
     wait_until_computed(list_arms[0].metric)
-    print(f"Running time: {time.time() - start_time_mamba:.1f} sec")
-    assert len(list_arms) == 1
+    print(f"Running time: {(time.time() - start_time_mamba):.1f} sec")
+    assert len(list_arms) < 3
     return list_arms[0]
 
 
@@ -77,8 +86,8 @@ def timed_sampler(build_kernel_fn):
             state = init_fn(subkey, params)
             # wait_until_computed(kernel(0, subkey, state))
             # hack: need this to compile the first 2 iterations of sgnht
-            state_hack = kernel(0, subkey, state)
-            _ = kernel(1, subkey, state_hack)
+            # _ = kernel(1, subkey, kernel(0, subkey, state))
+            wait_until_computed(kernel(1, subkey, kernel(0, subkey, state)))
 
             start_time = time.time()
             i = 0
@@ -95,12 +104,15 @@ def timed_sampler(build_kernel_fn):
     return wrapper
 
 
-def update_state_arm(state: StateArm, samples: List, grads: List, error_fn: Callable) -> StateArm:
+def update_state_arm(state: StateArm, samples: List, grads: List, error_fn: Callable, get_fb_grads=None) -> StateArm:
     last_sample = samples[-1] if samples is not None else state.last_sample
+
+    if get_fb_grads:
+        samples, grads = get_fb_grads(samples)
 
     samples = flatten_param_list(samples)
     grads = flatten_param_list(grads)
-    #concatenate
+    # concatenate
     if state.samples is not None:
         all_samples = jnp.concatenate([state.samples, samples])
     else:

@@ -50,7 +50,7 @@ def gen_data(key, dim, N):
     """
     key, subkey1, subkey2, subkey3 = random.split(key, 4)
     rho = 0.4
-    print(f"generating data, with N={N} and dim={dim}")
+    print(f"generating data, with N={N:,} and dim={dim}")
     theta_true = random.normal(subkey1, shape=(dim, ))*jnp.sqrt(10)
     covX = genCovMat(subkey2, dim, rho)
     X = jnp.dot(random.normal(subkey3, shape=(N,dim)), jnp.linalg.cholesky(covX))
@@ -81,3 +81,20 @@ def logloss_samples(samples, X, y):
 
     batch_logloss = jit(vmap(_logloss, in_axes=(0, None, None)))
     return jnp.mean(batch_logloss(samples, X, y))
+
+
+
+@jit
+def accuracy(samples, X, y):
+
+    def predict(theta, x_val):
+        return -logsumexp(jnp.array([0., -jnp.dot(theta, x_val)]))
+
+    batch_predict_params = jit(vmap(predict, in_axes=(0, None)))
+
+    def _accuracy(samples, x_val, y_val):
+        pred = jnp.round(jnp.exp(jnp.mean(batch_predict_params(samples, x_val))), 0)
+        return jnp.array(pred == y_val, dtype=jnp.int32)
+
+    batch_accuracy = vmap(_accuracy, in_axes=(None, 0,0))
+    return jnp.mean(batch_accuracy(samples, X, y))
