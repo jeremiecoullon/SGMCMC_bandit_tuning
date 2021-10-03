@@ -12,7 +12,7 @@ def wait_until_computed(x):
 @jit
 def flatten_param_list(samples):
     """
-    Turns a list of PyTrees into list of jnp.array
+    Turns a list of PyTrees into an array of shape (Nsamples, dim)
     If the samples are already jnp.ndarray, then simply return them
     """
     if isinstance(samples, jnp.ndarray):

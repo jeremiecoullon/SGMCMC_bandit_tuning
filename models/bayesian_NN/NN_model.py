@@ -82,6 +82,17 @@ def accuracy(params, X, y):
     return jnp.mean(predicted_class == target_class)
 
 
+def get_accuracy_list_NN(samples, thin_step, X_test, y_test):
+    """
+    samples: list of NN samples
+    return list of accuracy for each sample.
+    """
+    list_acc = []
+
+    for sam in tqdm(samples[::thin_step]):
+        list_acc.append(accuracy(sam, X_test, y_test))
+
+    return list_acc
 
 # BNN acccuracy:
 # For each data point: get average prediction over all samples
@@ -144,6 +155,7 @@ def get_ECE_MCE(flat_samples, X_test, y_test, M, pbar=True):
     """
     Input: flat samples and test dataset
     Returns ECE and MCE
+    M: number of bins
     """
     pred_classes, pred_probs, succ_array = batch_get_prediction(flat_samples, X_test, y_test)
 

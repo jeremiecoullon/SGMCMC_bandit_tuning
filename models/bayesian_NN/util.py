@@ -16,15 +16,15 @@ def read_idx(filename):
         shape = tuple(struct.unpack('>I', f.read(4))[0] for d in range(dims))
         return np.fromstring(f.read(), dtype=np.uint8).reshape(shape)
 
-# def flatten_NN_params(params):
-#     """
-#     params: list of NN parameters
-#         Each param in a list of (mat, vect) for each layer
-#     """
-#     flattened_params = []
-#     for lesam in params:
-#         flattened_params.append(np.concatenate([np.concatenate([mat.flatten(), vect]) for mat, vect in lesam]))
-#     return jnp.array(flattened_params)
+def flatten_NN_params(params):
+    """
+    params: list of NN parameters
+        Each param in a list of (mat, vect) for each layer
+    """
+    flattened_params = []
+    for lesam in params:
+        flattened_params.append(np.concatenate([np.concatenate([mat.flatten(), vect]) for mat, vect in lesam]))
+    return jnp.array(flattened_params)
 #
 # def _flatten_jax(layer):
 #     "Utility function for flatten_NN_params_jaxscan"

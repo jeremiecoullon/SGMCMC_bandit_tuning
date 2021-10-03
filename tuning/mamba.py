@@ -20,7 +20,7 @@ class StateArm(NamedTuple):
     metric: Any = jnp.inf
 
     def __str__(self):
-        return f"Hyperparams: {self.hyperparameters}. metric: {self.metric:.0f}"
+        return f"Hyperparams: {self.hyperparameters}., sample shape={self.samples.shape}. metric: {self.metric:.0f}"
 
 
 def run_MAMBA(key: PRNGKey, build_kernel: Callable, error_fn: Callable, R: float,

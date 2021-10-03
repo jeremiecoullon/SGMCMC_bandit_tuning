@@ -1,0 +1,13 @@
+Evaluate NN samplers
+build partial kernels
+
+
+sgld
+ece_est, mce_est, num_samples:
+
+Assessing the samples. Num samples: 3135
+MAMBA: (0.010870232391357423, DeviceArray(0.27710357, dtype=float32), 3135)
+Assessing the samples. Num samples: 461
+gridsearch: (0.2170823486328125, DeviceArray(0.31473416, dtype=float32), 461)
+Assessing the samples. Num samples: 452
+baseline: (0.014740887451171875, DeviceArray(0.23301202, dtype=float32), 452)
