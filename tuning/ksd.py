@@ -106,13 +106,13 @@ def FSSD_O2(samples, grads, V):
 def get_test_locations(samples, J=10, key=random.PRNGKey(0)):
     _, dim = jnp.shape(samples)
     gauss_mean = jnp.mean(samples, axis=0)
-    # gauss_cov = jnp.cov(samples.T) + 1e-10*jnp.eye(dim)
-    # gauss_chol = jnp.linalg.cholesky(gauss_cov)
-    # gauss_chol = jnp.diag(jnp.diag(jnp.linalg.cholesky(gauss_cov)))
-    # batch_get_samples = vmap(lambda k: jnp.dot(gauss_chol, random.normal(key, shape=(dim,))) + gauss_mean)
+    gauss_cov = jnp.cov(samples.T) + 1e-10*jnp.eye(dim)
+    gauss_chol = jnp.linalg.cholesky(gauss_cov)
+    # gauss_chol = jnp.diag(jnp.diag(jnp.linalg.cholesky(gauss_cov))) # diagonal version
+    batch_get_samples = vmap(lambda k: jnp.dot(gauss_chol, random.normal(key, shape=(dim,))) + gauss_mean)
 
-    gauss_chol = jnp.std(samples, axis=0) # diagonal cholesky
-    batch_get_samples = vmap(lambda k: gauss_chol*random.normal(key, shape=(dim,)) + gauss_mean)
+    # gauss_chol = jnp.std(samples, axis=0) # diagonal cholesky
+    # batch_get_samples = vmap(lambda k: gauss_chol*random.normal(key, shape=(dim,)) + gauss_mean)
     V = batch_get_samples(random.split(key, J))
     return V
 

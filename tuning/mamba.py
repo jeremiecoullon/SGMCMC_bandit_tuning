@@ -31,7 +31,6 @@ def run_MAMBA(key: PRNGKey, build_kernel: Callable, error_fn: Callable, R: float
     todo:
     - what if sampler gave nothing in the given time budget? 1. don't concat. 2. last sample.
     - number of iterations: check manually
-    - keep best 3 rather than best 1 ?
     """
     list_hyperparams = create_grid(grid_params)
     timed_sampler_factory = timed_sampler(build_kernel)
