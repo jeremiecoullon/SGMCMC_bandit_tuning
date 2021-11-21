@@ -1,6 +1,7 @@
 venv/
 data/notMNIST/
 data/MovieLens/
+experiments/images/
 .DS_Store
 __pycache__/
 drafts/
